@@ -12,12 +12,13 @@ import {
 import { getProcessesByIdAndVersion } from '@/services/processes/api';
 import { genProcessName } from '@/services/processes/util';
 import { ActionType } from '@ant-design/pro-components';
-import { message, Space, Spin, theme } from 'antd';
+import { Button, message, Space, Spin, theme } from 'antd';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
 import { useIntl } from 'umi';
 // import ConnectableProcesses from '../connectableProcesses';
 import { GraphEdge, GraphNode } from '@/contexts/graphContext';
+import { exportLcaModelSnapshot } from '../../../../../plugins/export-lca-model';
 import ModelResult from '../modelResult';
 import { Control } from './control';
 import EdgeExhange from './Exchange/index';
@@ -57,6 +58,7 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
   const [nodeCount, setNodeCount] = useState(0);
 
   const { token } = theme.useToken();
+  const exportMessageKey = 'export-lca-snapshot';
 
   const inputFlowTool = {
     id: 'inputFlow',
@@ -530,8 +532,56 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
     );
   };
 
+  const handleExportSnapshot = async () => {
+    if (!id || !version) {
+      return;
+    }
+    message.loading({
+      content: intl.formatMessage({
+        id: 'pages.lifecyclemodel.exportSnapshot.loading',
+        defaultMessage: 'Exporting snapshot...',
+      }),
+      key: exportMessageKey,
+    });
+    try {
+      const snapshot = await exportLcaModelSnapshot({ modelId: id, modelVersion: version });
+      const fileName = `lca-snapshot-${id}-${version}.json`;
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], {
+        type: 'application/json',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+      message.success({
+        content: intl.formatMessage({
+          id: 'pages.lifecyclemodel.exportSnapshot.success',
+          defaultMessage: 'Snapshot exported',
+        }),
+        key: exportMessageKey,
+      });
+    } catch (error) {
+      console.error(error);
+      message.error({
+        content: intl.formatMessage({
+          id: 'pages.lifecyclemodel.exportSnapshot.error',
+          defaultMessage: 'Snapshot export failed',
+        }),
+        key: exportMessageKey,
+      });
+    }
+  };
+
   return (
     <Space direction='vertical' size={'middle'}>
+      <Button size='small' onClick={handleExportSnapshot}>
+        {intl.formatMessage({
+          id: 'pages.lifecyclemodel.exportSnapshot',
+          defaultMessage: 'Export Snapshot',
+        })}
+      </Button>
       <ToolbarViewInfo lang={lang} data={infoData} />
       {getShowResult()}
       <EdgeExhange
