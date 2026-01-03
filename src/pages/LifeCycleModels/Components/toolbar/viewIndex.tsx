@@ -24,6 +24,7 @@ import ModelResult from '../modelResult';
 import { Control } from './control';
 import EdgeExhange from './Exchange/index';
 import IoPortView from './Exchange/ioPortView';
+import { getEdgeLabel } from './utils/edge';
 import ToolbarViewInfo from './viewInfo';
 import TargetAmount from './viewTargetAmount';
 type Props = {
@@ -407,7 +408,7 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
         setInfoData({ ...fromData, id: id });
         setJsonTg(result.data?.json_tg);
         const model = genLifeCycleModelData(result.data?.json_tg ?? {}, lang);
-        let initNodes = (model?.nodes ?? []).map((node: any) => {
+        const initNodes = (model?.nodes ?? []).map((node: any) => {
           return {
             ...node,
             attrs: nodeAttrs,
@@ -454,6 +455,11 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
             if (edge.target) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const { x, y, ...targetRest } = edge.target as any;
+              const label = getEdgeLabel(
+                token,
+                edge?.data?.connection?.unbalancedAmount,
+                edge?.data?.connection?.exchangeAmount,
+              );
               return {
                 ...edge,
                 attrs: {
@@ -461,6 +467,7 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
                     stroke: token.colorPrimary,
                   },
                 },
+                labels: [label],
                 target: targetRest,
               };
             }
