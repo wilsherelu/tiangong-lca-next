@@ -29,6 +29,7 @@ import {
   CheckCircleOutlined,
   CopyOutlined,
   DeleteOutlined,
+  ExportOutlined,
   SaveOutlined,
   SendOutlined,
 } from '@ant-design/icons';
@@ -36,6 +37,7 @@ import { Button, message, Space, Spin, theme, Tooltip } from 'antd';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'umi';
 import { v4 } from 'uuid';
+import { exportLcaModelSnapshot } from '../../../../../plugins/export-lca-model';
 import ConnectableProcesses from '../connectableProcesses';
 import LifeCycleModelEdit from '../edit';
 import ModelResult from '../modelResult';
@@ -1521,6 +1523,52 @@ const ToolbarEdit: FC<Props> = ({
     }
   };
 
+  const exportMessageKey = 'export-lca-snapshot';
+  const handleExportSnapshot = async () => {
+    if (!thisId || !thisVersion) {
+      return;
+    }
+    message.loading({
+      content: intl.formatMessage({
+        id: 'pages.lifecyclemodel.exportSnapshot.loading',
+        defaultMessage: 'Exporting snapshot...',
+      }),
+      key: exportMessageKey,
+    });
+    try {
+      const snapshot = await exportLcaModelSnapshot({
+        modelId: thisId,
+        modelVersion: thisVersion,
+      });
+      const fileName = `lca-snapshot-${thisId}-${thisVersion}.json`;
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], {
+        type: 'application/json',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+      message.success({
+        content: intl.formatMessage({
+          id: 'pages.lifecyclemodel.exportSnapshot.success',
+          defaultMessage: 'Snapshot exported',
+        }),
+        key: exportMessageKey,
+      });
+    } catch (error) {
+      console.error(error);
+      message.error({
+        content: intl.formatMessage({
+          id: 'pages.lifecyclemodel.exportSnapshot.error',
+          defaultMessage: 'Snapshot export failed',
+        }),
+        key: exportMessageKey,
+      });
+    }
+  };
+
   return (
     <Space
       direction='vertical'
@@ -1550,6 +1598,21 @@ const ToolbarEdit: FC<Props> = ({
       />
 
       <ModelToolbarAdd buttonType={'icon'} lang={lang} onData={addProcessNodes} />
+      <Tooltip
+        title={intl.formatMessage({
+          id: 'pages.lifecyclemodel.exportSnapshot',
+          defaultMessage: 'Export Snapshot',
+        })}
+        placement='left'
+      >
+        <Button
+          type='primary'
+          size='small'
+          icon={<ExportOutlined />}
+          style={{ boxShadow: 'none' }}
+          onClick={handleExportSnapshot}
+        />
+      </Tooltip>
       {/* <Tooltip
             title={
               <FormattedMessage

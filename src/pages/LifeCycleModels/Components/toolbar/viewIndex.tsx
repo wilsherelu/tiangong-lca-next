@@ -11,8 +11,9 @@ import {
 } from '@/services/lifeCycleModels/util';
 import { getProcessesByIdAndVersion } from '@/services/processes/api';
 import { genProcessName } from '@/services/processes/util';
+import { ExportOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
-import { Button, message, Space, Spin, theme } from 'antd';
+import { Button, message, Space, Spin, theme, Tooltip } from 'antd';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
 import { useIntl } from 'umi';
@@ -576,12 +577,21 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
 
   return (
     <Space direction='vertical' size={'middle'}>
-      <Button size='small' onClick={handleExportSnapshot}>
-        {intl.formatMessage({
+      <Tooltip
+        title={intl.formatMessage({
           id: 'pages.lifecyclemodel.exportSnapshot',
           defaultMessage: 'Export Snapshot',
         })}
-      </Button>
+        placement='left'
+      >
+        <Button
+          type='primary'
+          size='small'
+          icon={<ExportOutlined />}
+          style={{ boxShadow: 'none' }}
+          onClick={handleExportSnapshot}
+        />
+      </Tooltip>
       <ToolbarViewInfo lang={lang} data={infoData} />
       {getShowResult()}
       <EdgeExhange
