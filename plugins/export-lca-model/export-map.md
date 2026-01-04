@@ -1,7 +1,6 @@
 # Tiangong → LCA Export Source Map (Frozen)
 
-This document defines the authoritative data sources for exporting
-a solver-ready LCA model snapshot from tiangong-lca-next.
+This document defines the authoritative data sources for exporting a solver-ready LCA model snapshot from tiangong-lca-next.
 
 It is a **data contract**, not an implementation guide.
 
@@ -75,11 +74,10 @@ It is a **data contract**, not an implementation guide.
 
 - unit_uuid  
   → not stored on exchange  
-  → resolved via:
-    flow UUID  
-    → flow property quantitative reference  
-    → unit group quantitative reference  
-    → reference unit UUID  
+  → resolved via: flow UUID  
+   → flow property quantitative reference  
+   → unit group quantitative reference  
+   → reference unit UUID  
   [Decision] Use reference unit of the resolved unit group
 
 - is_reference_product  
@@ -115,7 +113,7 @@ It is a **data contract**, not an implementation guide.
 
 - consumer_process_uuid  
   → lifeCycleModelDataSet.lifeCycleModelInformation.technology.processes  
-    .processInstance.connections.outputExchange.downstreamProcess["@id"]  
+   .processInstance.connections.outputExchange.downstreamProcess["@id"]  
   → mapped to process UUID via processInstance.referenceToProcess["@refObjectId"]
 
 - provider_process_uuid  
@@ -127,18 +125,16 @@ It is a **data contract**, not an implementation guide.
 
 [Link Definition]
 
-- Explicit: defined at model level via processInstance.connections.outputExchange  
+- Explicit: defined at model level via processInstance.connections.outputExchange
 - Implicit: derived by matching exchanges and flows when explicit links are absent
 
-[Decision]
-Prefer explicit model-level links if available; otherwise derive implicitly.
+[Decision] Prefer explicit model-level links if available; otherwise derive implicitly.
 
 ---
 
 ## Completion Criterion
 
-With only the data defined in this document,
-an external solver must be able to reconstruct:
+With only the data defined in this document, an external solver must be able to reconstruct:
 
 - the full process graph
 - exchange matrices (A/B)

@@ -1,3 +1,4 @@
+import { exportLcaModelSnapshot } from '@/../plugins/export-lca-model';
 import { GraphEdge, GraphNode, useGraphEvent, useGraphStore } from '@/contexts/graphContext';
 import ProcessEdit from '@/pages/Processes/Components/edit';
 import ProcessView from '@/pages/Processes/Components/view';
@@ -37,7 +38,6 @@ import { Button, message, Space, Spin, theme, Tooltip } from 'antd';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'umi';
 import { v4 } from 'uuid';
-import { exportLcaModelSnapshot } from '../../../../../plugins/export-lca-model';
 import ConnectableProcesses from '../connectableProcesses';
 import LifeCycleModelEdit from '../edit';
 import ModelResult from '../modelResult';

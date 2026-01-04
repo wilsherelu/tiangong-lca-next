@@ -32,6 +32,7 @@ jest.mock('@ant-design/icons', () => ({
   __esModule: true,
   CopyOutlined: () => <span>copy-icon</span>,
   DeleteOutlined: () => <span>delete-icon</span>,
+  ExportOutlined: () => <span>export-icon</span>,
   SaveOutlined: () => <span>save-icon</span>,
   SendOutlined: () => <span>send-icon</span>,
   CheckCircleOutlined: () => <span>check-icon</span>,
@@ -164,6 +165,11 @@ jest.mock('@/pages/Processes/Components/edit', () => ({
 jest.mock('@/pages/Processes/Components/view', () => ({
   __esModule: true,
   default: () => <div>process-view</div>,
+}));
+
+jest.mock('@/../plugins/export-lca-model', () => ({
+  __esModule: true,
+  exportLcaModelSnapshot: jest.fn(),
 }));
 
 const mockCreateLifeCycleModel = jest.fn().mockResolvedValue({});

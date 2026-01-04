@@ -48,7 +48,4 @@
 - provider_process_uuid
 - flow_uuid
 
-Completion Criterion:
-With only the exported data defined in this document,
-a solver must be able to fully reconstruct and compute the LCA model
-without any dependency on the Tiangong platform.
+Completion Criterion: With only the exported data defined in this document, a solver must be able to fully reconstruct and compute the LCA model without any dependency on the Tiangong platform.

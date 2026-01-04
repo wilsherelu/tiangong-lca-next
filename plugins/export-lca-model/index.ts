@@ -26,8 +26,6 @@ type Snapshot = {
     process_uuid: string;
     process_name?: string | null;
     reference_product_flow_uuid?: string | null;
-    reference_amount?: unknown;
-    reference_unit_uuid?: string | null;
   }>;
   flows: Array<{
     flow_uuid: string;
@@ -42,9 +40,8 @@ type Snapshot = {
     flow_uuid?: string | null;
     direction?: unknown;
     amount?: unknown;
-    unit_uuid?: string | null;
     is_reference_product?: boolean;
-    provider_process_uuid?: string | null;
+    allocation_fraction?: unknown;
   }>;
   flow_properties: Array<{
     flow_property_uuid: string;
@@ -304,13 +301,6 @@ export async function exportLcaModelSnapshot(params: ExportParams): Promise<Snap
     });
   });
 
-  const linkLookup = new Map<string, string>();
-  links.forEach((link) => {
-    if (link.flow_uuid) {
-      linkLookup.set(`${link.consumer_process_uuid}:${link.flow_uuid}`, link.provider_process_uuid);
-    }
-  });
-
   const processes: Snapshot['processes'] = [];
   const exchanges: Snapshot['exchanges'] = [];
   const flowRefs = new Map<string, { id: string; version?: string }>();
@@ -330,14 +320,10 @@ export async function exportLcaModelSnapshot(params: ExportParams): Promise<Snap
     const referenceFlowId =
       processReferenceFlowId ?? referenceExchange?.referenceToFlowDataSet?.['@refObjectId'] ?? null;
 
-    const referenceAmount = referenceExchange ? pickExchangeAmount(referenceExchange) : null;
-
     processes.push({
       process_uuid: processId,
       process_name: processName,
       reference_product_flow_uuid: referenceFlowId,
-      reference_amount: referenceAmount ?? null,
-      reference_unit_uuid: null,
     });
 
     processExchanges.forEach((exchange) => {
@@ -348,12 +334,12 @@ export async function exportLcaModelSnapshot(params: ExportParams): Promise<Snap
       }
       const isReferenceProduct =
         Boolean(exchange?.quantitativeReference) || flowId === referenceFlowId;
-      const exchangeUnit = exchange?.unit_uuid ?? null;
       const amount = normalizeAmount(pickExchangeAmount(exchange));
       ensure(
         amount !== null,
         `Exchange amount invalid for process ${processId} flow ${flowId ?? 'unknown'}`,
       );
+      const allocationFraction = exchange?.allocations?.allocation?.['@allocatedFraction'] ?? null;
 
       exchanges.push({
         exchange_id:
@@ -365,9 +351,8 @@ export async function exportLcaModelSnapshot(params: ExportParams): Promise<Snap
         flow_uuid: flowId ?? null,
         direction: exchange?.exchangeDirection,
         amount,
-        unit_uuid: exchangeUnit,
         is_reference_product: isReferenceProduct,
-        provider_process_uuid: flowId ? (linkLookup.get(`${processId}:${flowId}`) ?? null) : null,
+        allocation_fraction: allocationFraction,
       });
     });
   });
@@ -579,32 +564,9 @@ export async function exportLcaModelSnapshot(params: ExportParams): Promise<Snap
       : null;
   });
 
-  const processRefUnitByFlow = new Map<string, string>();
-  flows.forEach((flow) => {
-    if (flow.flow_uuid && flow.default_unit_uuid) {
-      processRefUnitByFlow.set(flow.flow_uuid, flow.default_unit_uuid);
-    }
-  });
-
   const flowByUuid = new Map<string, Snapshot['flows'][number]>(
     flows.map((flow) => [flow.flow_uuid, flow]),
   );
-
-  processes.forEach((process) => {
-    if (process.reference_product_flow_uuid) {
-      process.reference_unit_uuid =
-        processRefUnitByFlow.get(process.reference_product_flow_uuid) ?? null;
-    }
-  });
-
-  const linkKeyCounts = new Map<string, number>();
-  links.forEach((link) => {
-    if (!link.flow_uuid) {
-      return;
-    }
-    const key = `${link.provider_process_uuid}:${link.flow_uuid}:${link.consumer_process_uuid}`;
-    linkKeyCounts.set(key, (linkKeyCounts.get(key) ?? 0) + 1);
-  });
 
   const referencedUnitGroups = new Set<string>();
   flows.forEach((flow) => {
@@ -623,11 +585,6 @@ export async function exportLcaModelSnapshot(params: ExportParams): Promise<Snap
       flowByUuid.has(exchange.flow_uuid as string),
       `Exchange flow_uuid not found in flows: ${exchange.flow_uuid}`,
     );
-
-    if (exchange.provider_process_uuid) {
-      const key = `${exchange.provider_process_uuid}:${exchange.flow_uuid}:${exchange.process_uuid}`;
-      ensure(linkKeyCounts.get(key) === 1, `Exchange provider link missing or non-unique: ${key}`);
-    }
   });
 
   const units: Snapshot['units'] = [];
