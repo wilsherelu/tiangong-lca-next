@@ -138,10 +138,16 @@ const normalizeName = (value: any): string | null => {
 const getProcessInternalId = (instance: any): string | null =>
   instance?.['@dataSetInternalID'] ?? instance?.['@id'] ?? null;
 
-const getDownstreamInternalId = (outputExchange: any): string | null =>
-  outputExchange?.downstreamProcess?.['@id'] ??
-  outputExchange?.downstreamProcess?.['@dataSetInternalID'] ??
-  null;
+const getDownstreamInternalIds = (outputExchange: any): string[] => {
+  const downstream = toArray(outputExchange?.downstreamProcess);
+  const ids = downstream
+    .map(
+      (entry) =>
+        entry?.['@id'] ?? entry?.['@dataSetInternalID'] ?? entry?.['@dataSetInternalId'] ?? null,
+    )
+    .filter((value): value is string => Boolean(value));
+  return Array.from(new Set(ids));
+};
 
 const pickExchangeAmount = (exchange: any) => {
   const resulting = readValue(exchange?.resultingAmount);
@@ -285,18 +291,20 @@ export async function exportLcaModelSnapshot(params: ExportParams): Promise<Snap
     const providerProcessId = instance?.referenceToProcess?.['@refObjectId'];
     const outputExchanges = toArray(instance?.connections?.outputExchange);
     outputExchanges.forEach((outputExchange) => {
-      const consumerInstanceId = getDownstreamInternalId(outputExchange);
-      if (!providerProcessId || !consumerInstanceId) {
+      const consumerInstanceIds = getDownstreamInternalIds(outputExchange);
+      if (!providerProcessId || consumerInstanceIds.length === 0) {
         return;
       }
-      const consumerProcessId = processInternalToUuid.get(consumerInstanceId);
-      if (!consumerProcessId) {
-        return;
-      }
-      links.push({
-        consumer_process_uuid: consumerProcessId,
-        provider_process_uuid: providerProcessId,
-        flow_uuid: outputExchange?.['@flowUUID'] ?? null,
+      consumerInstanceIds.forEach((consumerInstanceId) => {
+        const consumerProcessId = processInternalToUuid.get(consumerInstanceId);
+        if (!consumerProcessId) {
+          return;
+        }
+        links.push({
+          consumer_process_uuid: consumerProcessId,
+          provider_process_uuid: providerProcessId,
+          flow_uuid: outputExchange?.['@flowUUID'] ?? null,
+        });
       });
     });
   });
