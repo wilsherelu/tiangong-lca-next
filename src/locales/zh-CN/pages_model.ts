@@ -1,8 +1,8 @@
 export default {
-  'pages.lifecyclemodel.exportSnapshot': '导出模型快照',
-  'pages.lifecyclemodel.exportSnapshot.loading': '正在导出模型快照...',
-  'pages.lifecyclemodel.exportSnapshot.success': '模型快照已导出',
-  'pages.lifecyclemodel.exportSnapshot.error': '模型快照导出失败',
+  'pages.lifecyclemodel.runSolver': '运行 LCIA 求解',
+  'pages.lifecyclemodel.runSolver.loading': '正在运行 LCIA 求解...',
+  'pages.lifecyclemodel.runSolver.success': 'LCIA 求解完成',
+  'pages.lifecyclemodel.runSolver.error': 'LCIA 求解失败',
   'pages.lifeCycleModel.modelResults.subProduct': '子产品',
   'pages.lifeCycleModel.modelResults.mainProduct': '主产品',
   'pages.lifeCycleModel.drawer.title.create': '创建模型',

@@ -167,9 +167,9 @@ jest.mock('@/pages/Processes/Components/view', () => ({
   default: () => <div>process-view</div>,
 }));
 
-jest.mock('@/../plugins/export-lca-model', () => ({
+jest.mock('@/services/lcaSolver/api', () => ({
   __esModule: true,
-  exportLcaModelSnapshot: jest.fn(),
+  runLciaSolverForModel: jest.fn(),
 }));
 
 const mockCreateLifeCycleModel = jest.fn().mockResolvedValue({});

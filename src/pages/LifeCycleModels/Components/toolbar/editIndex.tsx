@@ -1,4 +1,3 @@
-import { exportLcaModelSnapshot } from '@/../plugins/export-lca-model';
 import { GraphEdge, GraphNode, useGraphEvent, useGraphStore } from '@/contexts/graphContext';
 import ProcessEdit from '@/pages/Processes/Components/edit';
 import ProcessView from '@/pages/Processes/Components/view';
@@ -7,6 +6,8 @@ import { checkReferences, getAllRefObj, getRefTableName, ReffPath } from '@/page
 import { getRefData } from '@/services/general/api';
 import { initVersion } from '@/services/general/data';
 import { formatDateTime, getLangText } from '@/services/general/util';
+import { runLciaSolverForModelWithSnapshot } from '@/services/lcaSolver/api';
+import { buildProcessLabels, lciaSolverResultToCsv } from '@/services/lcaSolver/util';
 import {
   createLifeCycleModel,
   getLifeCycleModelDetail,
@@ -1558,27 +1559,27 @@ const ToolbarEdit: FC<Props> = ({
     }
   };
 
-  const exportMessageKey = 'export-lca-snapshot';
-  const handleExportSnapshot = async () => {
+  const solverMessageKey = 'run-lca-solver';
+  const handleRunSolver = async () => {
     if (!thisId || !thisVersion) {
       return;
     }
     message.loading({
       content: intl.formatMessage({
-        id: 'pages.lifecyclemodel.exportSnapshot.loading',
-        defaultMessage: 'Exporting snapshot...',
+        id: 'pages.lifecyclemodel.runSolver.loading',
+        defaultMessage: 'Running LCIA solver...',
       }),
-      key: exportMessageKey,
+      key: solverMessageKey,
     });
     try {
-      const snapshot = await exportLcaModelSnapshot({
+      const { result, snapshot } = await runLciaSolverForModelWithSnapshot({
         modelId: thisId,
         modelVersion: thisVersion,
       });
-      const fileName = `lca-snapshot-${thisId}-${thisVersion}.json`;
-      const blob = new Blob([JSON.stringify(snapshot, null, 2)], {
-        type: 'application/json',
-      });
+      const processLabels = buildProcessLabels(snapshot, result);
+      const fileName = `lcia-results-${thisId}-${thisVersion}.csv`;
+      const csv = lciaSolverResultToCsv(result, { processLabels });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
@@ -1587,19 +1588,19 @@ const ToolbarEdit: FC<Props> = ({
       window.URL.revokeObjectURL(url);
       message.success({
         content: intl.formatMessage({
-          id: 'pages.lifecyclemodel.exportSnapshot.success',
-          defaultMessage: 'Snapshot exported',
+          id: 'pages.lifecyclemodel.runSolver.success',
+          defaultMessage: 'LCIA solver finished',
         }),
-        key: exportMessageKey,
+        key: solverMessageKey,
       });
     } catch (error) {
       console.error(error);
       message.error({
         content: intl.formatMessage({
-          id: 'pages.lifecyclemodel.exportSnapshot.error',
-          defaultMessage: 'Snapshot export failed',
+          id: 'pages.lifecyclemodel.runSolver.error',
+          defaultMessage: 'LCIA solver failed',
         }),
-        key: exportMessageKey,
+        key: solverMessageKey,
       });
     }
   };
@@ -1635,8 +1636,8 @@ const ToolbarEdit: FC<Props> = ({
       <ModelToolbarAdd buttonType={'icon'} lang={lang} onData={addProcessNodes} />
       <Tooltip
         title={intl.formatMessage({
-          id: 'pages.lifecyclemodel.exportSnapshot',
-          defaultMessage: 'Export Snapshot',
+          id: 'pages.lifecyclemodel.runSolver',
+          defaultMessage: 'Run LCIA Solver',
         })}
         placement='left'
       >
@@ -1645,7 +1646,7 @@ const ToolbarEdit: FC<Props> = ({
           size='small'
           icon={<ExportOutlined />}
           style={{ boxShadow: 'none' }}
-          onClick={handleExportSnapshot}
+          onClick={handleRunSolver}
         />
       </Tooltip>
       {/* <Tooltip

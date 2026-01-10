@@ -53,3 +53,5 @@ docker/volumes/db/data
 docker/volumes/storage
 docker/.env
 docker/test.http
+
+api_test_file/

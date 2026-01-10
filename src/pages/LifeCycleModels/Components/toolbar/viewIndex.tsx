@@ -18,8 +18,9 @@ import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
 import { useIntl } from 'umi';
 // import ConnectableProcesses from '../connectableProcesses';
-import { exportLcaModelSnapshot } from '@/../plugins/export-lca-model';
 import { GraphEdge, GraphNode } from '@/contexts/graphContext';
+import { runLciaSolverForModelWithSnapshot } from '@/services/lcaSolver/api';
+import { buildProcessLabels, lciaSolverResultToCsv } from '@/services/lcaSolver/util';
 import ModelResult from '../modelResult';
 import { Control } from './control';
 import EdgeExhange from './Exchange/index';
@@ -60,7 +61,7 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
   const [nodeCount, setNodeCount] = useState(0);
 
   const { token } = theme.useToken();
-  const exportMessageKey = 'export-lca-snapshot';
+  const solverMessageKey = 'run-lca-solver';
 
   const inputFlowTool = {
     id: 'inputFlow',
@@ -540,23 +541,26 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
     );
   };
 
-  const handleExportSnapshot = async () => {
+  const handleRunSolver = async () => {
     if (!id || !version) {
       return;
     }
     message.loading({
       content: intl.formatMessage({
-        id: 'pages.lifecyclemodel.exportSnapshot.loading',
-        defaultMessage: 'Exporting snapshot...',
+        id: 'pages.lifecyclemodel.runSolver.loading',
+        defaultMessage: 'Running LCIA solver...',
       }),
-      key: exportMessageKey,
+      key: solverMessageKey,
     });
     try {
-      const snapshot = await exportLcaModelSnapshot({ modelId: id, modelVersion: version });
-      const fileName = `lca-snapshot-${id}-${version}.json`;
-      const blob = new Blob([JSON.stringify(snapshot, null, 2)], {
-        type: 'application/json',
+      const { result, snapshot } = await runLciaSolverForModelWithSnapshot({
+        modelId: id,
+        modelVersion: version,
       });
+      const processLabels = buildProcessLabels(snapshot, result);
+      const fileName = `lcia-results-${id}-${version}.csv`;
+      const csv = lciaSolverResultToCsv(result, { processLabels });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
@@ -565,19 +569,19 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
       window.URL.revokeObjectURL(url);
       message.success({
         content: intl.formatMessage({
-          id: 'pages.lifecyclemodel.exportSnapshot.success',
-          defaultMessage: 'Snapshot exported',
+          id: 'pages.lifecyclemodel.runSolver.success',
+          defaultMessage: 'LCIA solver finished',
         }),
-        key: exportMessageKey,
+        key: solverMessageKey,
       });
     } catch (error) {
       console.error(error);
       message.error({
         content: intl.formatMessage({
-          id: 'pages.lifecyclemodel.exportSnapshot.error',
-          defaultMessage: 'Snapshot export failed',
+          id: 'pages.lifecyclemodel.runSolver.error',
+          defaultMessage: 'LCIA solver failed',
         }),
-        key: exportMessageKey,
+        key: solverMessageKey,
       });
     }
   };
@@ -586,8 +590,8 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
     <Space direction='vertical' size={'middle'}>
       <Tooltip
         title={intl.formatMessage({
-          id: 'pages.lifecyclemodel.exportSnapshot',
-          defaultMessage: 'Export Snapshot',
+          id: 'pages.lifecyclemodel.runSolver',
+          defaultMessage: 'Run LCIA Solver',
         })}
         placement='left'
       >
@@ -596,7 +600,7 @@ const ToolbarView: FC<Props> = ({ id, version, lang, drawerVisible }) => {
           size='small'
           icon={<ExportOutlined />}
           style={{ boxShadow: 'none' }}
-          onClick={handleExportSnapshot}
+          onClick={handleRunSolver}
         />
       </Tooltip>
       <ToolbarViewInfo lang={lang} data={infoData} />

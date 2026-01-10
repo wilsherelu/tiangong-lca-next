@@ -1,8 +1,8 @@
 export default {
-  'pages.lifecyclemodel.exportSnapshot': 'Export Snapshot',
-  'pages.lifecyclemodel.exportSnapshot.loading': 'Exporting snapshot...',
-  'pages.lifecyclemodel.exportSnapshot.success': 'Snapshot exported',
-  'pages.lifecyclemodel.exportSnapshot.error': 'Snapshot export failed',
+  'pages.lifecyclemodel.runSolver': 'Run LCIA Solver',
+  'pages.lifecyclemodel.runSolver.loading': 'Running LCIA solver...',
+  'pages.lifecyclemodel.runSolver.success': 'LCIA solver finished',
+  'pages.lifecyclemodel.runSolver.error': 'LCIA solver failed',
   'pages.lifeCycleModel.modelResults.subProduct': 'Sub Product',
   'pages.lifeCycleModel.modelResults.mainProduct': 'Main Product',
 
