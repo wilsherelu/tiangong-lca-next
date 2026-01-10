@@ -3,7 +3,7 @@ import { buildProcessLabels, lciaSolverResultToCsv } from '@/services/lcaSolver/
 describe('lcaSolver util', () => {
   it('creates csv with method_en labels', () => {
     const csv = lciaSolverResultToCsv({
-      indicator_index: [0, 1],
+      indicator_index: ['0', '1'],
       process_index: ['proc-1', 'proc-2'],
       values: [
         [1, 2],
@@ -27,7 +27,7 @@ describe('lcaSolver util', () => {
   it('uses process labels when provided', () => {
     const csv = lciaSolverResultToCsv(
       {
-        indicator_index: [0],
+        indicator_index: ['0'],
         process_index: ['proc-1'],
         values: [[7]],
       },
@@ -77,7 +77,7 @@ describe('lcaSolver util', () => {
         links: [],
       },
       {
-        indicator_index: [0],
+        indicator_index: ['0'],
         process_index: ['proc-1'],
         values: [[1]],
       },
@@ -127,7 +127,7 @@ describe('lcaSolver util', () => {
         links: [],
       },
       {
-        indicator_index: [0],
+        indicator_index: ['0'],
         process_index: ['proc-1'],
         values: [[1]],
       },
@@ -188,7 +188,7 @@ describe('lcaSolver util', () => {
           links: [],
         },
         {
-          indicator_index: [0],
+          indicator_index: ['0'],
           process_index: ['proc-1'],
           values: [[1]],
         },
